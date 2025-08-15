@@ -1,5 +1,5 @@
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 export default function HomePage() {
   return (
@@ -12,13 +12,13 @@ export default function HomePage() {
       </p>
       <div className="flex gap-3">
         <Link 
-          href="/dashboard" 
+          to="/dashboard" 
           className="rounded-lg bg-black text-white px-4 py-2 hover:bg-gray-800 transition-colors"
         >
           Try Free
         </Link>
         <Link 
-          href="/pricing" 
+          to="/pricing" 
           className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-50 transition-colors"
         >
           View Pricing

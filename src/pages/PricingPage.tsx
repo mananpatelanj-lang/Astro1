@@ -1,5 +1,19 @@
 
+import { useState } from 'react';
+
 export default function PricingPage() {
+  const [loading, setLoading] = useState(false);
+
+  const handlePurchase = async () => {
+    setLoading(true);
+    // Simulate purchase - in a real app this would connect to a payment processor
+    setTimeout(() => {
+      setLoading(false);
+      alert('Purchase completed! Redirecting to dashboard.');
+      window.location.href = '/dashboard';
+    }, 1000);
+  };
+
   return (
     <div className="grid gap-6">
       <h1 className="text-2xl font-semibold">Pricing</h1>
@@ -19,11 +33,13 @@ export default function PricingPage() {
             <li>+3 email sends (shared across profiles)</li>
             <li>30‑day access; renew anytime</li>
           </ul>
-          <form action="/api/purchase/order" method="post">
-            <button className="mt-3 rounded-lg bg-black text-white px-4 py-2 hover:bg-gray-800 transition-colors">
-              Buy Pack
-            </button>
-          </form>
+          <button 
+            onClick={handlePurchase}
+            disabled={loading}
+            className="mt-3 rounded-lg bg-black text-white px-4 py-2 hover:bg-gray-800 transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Processing...' : 'Buy Pack'}
+          </button>
         </div>
       </div>
     </div>

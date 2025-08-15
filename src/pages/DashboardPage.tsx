@@ -1,9 +1,8 @@
 
-'use client';
-
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import EmailMatrix from '@/components/EmailMatrix';
+import { Link } from 'react-router-dom';
+import EmailMatrix from '../components/EmailMatrix';
+import { getUserEmailFromCookie, setAuthToken, signInMock } from '../lib/auth';
 
 type Me = {
   email: string;
@@ -25,24 +24,100 @@ type Me = {
   }[];
 };
 
+// Mock data for demo
+const mockMe: Me = {
+  email: 'user@demo.local',
+  state: 'PRO_ACTIVE',
+  proExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  quotas: {
+    trialTotal: 3,
+    trialUsed: 1,
+    emailTotal: 3,
+    emailUsed: 2
+  },
+  identities: [
+    {
+      id: '1',
+      label: 'Profile 1',
+      fullName: 'John Doe',
+      dob: '1990-01-01',
+      tob: '08:00',
+      place: 'New York'
+    }
+  ]
+};
+
 export default function DashboardPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/me')
-      .then(r => r.json())
-      .then(setMe)
-      .catch(e => setError(String(e)))
-      .finally(() => setLoading(false));
+    // Check if user is signed in
+    const email = getUserEmailFromCookie();
+    if (!email) {
+      // Auto sign-in for demo
+      const demoEmail = `user${Math.floor(Math.random() * 999)}@demo.local`;
+      const token = signInMock(demoEmail);
+      setAuthToken(token);
+      setMe({ ...mockMe, email: demoEmail });
+    } else {
+      setMe({ ...mockMe, email });
+    }
+    setLoading(false);
   }, []);
+
+  const handlePurchase = () => {
+    if (!me) return;
+    setMe(prev => prev ? {
+      ...prev,
+      quotas: {
+        ...prev.quotas,
+        trialTotal: prev.quotas.trialTotal + 3,
+        emailTotal: prev.quotas.emailTotal + 3
+      }
+    } : null);
+  };
+
+  const handleIdentitySubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!me) return;
+    
+    const formData = new FormData(e.currentTarget);
+    const trialsLeft = me.quotas.trialTotal - me.quotas.trialUsed;
+    
+    if (trialsLeft <= 0) {
+      setError('No trials left. Please purchase a pack.');
+      return;
+    }
+
+    const newIdentity = {
+      id: Math.random().toString(36).substr(2, 9),
+      label: `Profile ${me.identities.length + 1}`,
+      fullName: formData.get('fullName') as string,
+      dob: formData.get('dob') as string,
+      tob: formData.get('tob') as string,
+      place: formData.get('place') as string
+    };
+
+    setMe(prev => prev ? {
+      ...prev,
+      identities: [...prev.identities, newIdentity],
+      quotas: {
+        ...prev.quotas,
+        trialUsed: prev.quotas.trialUsed + 1
+      }
+    } : null);
+
+    e.currentTarget.reset();
+    setError('');
+  };
 
   if (loading) return <p>Loading…</p>;
   if (error) return <p className="text-red-600">{error}</p>;
   if (!me) return (
     <p>
-      No session. <Link href="/api/auth/mock" className="text-blue-600 underline">Sign in</Link>
+      No session. <button onClick={() => window.location.reload()} className="text-blue-600 underline">Sign in</button>
     </p>
   );
 
@@ -65,24 +140,32 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       <div className="grid md:grid-cols-3 gap-4">
         <div className="rounded-xl border p-4 bg-white hover:shadow-md transition-shadow">
           <div className="text-sm text-gray-600">Trials left</div>
           <div className="text-3xl font-bold mt-1">{trialsLeft}</div>
-          <form action="/api/purchase/order" method="post">
-            <button className="mt-3 w-full rounded-lg bg-black text-white px-4 py-2 hover:bg-gray-800 transition-colors">
-              Buy Pack (₹100)
-            </button>
-          </form>
+          <button
+            onClick={handlePurchase}
+            className="mt-3 w-full rounded-lg bg-black text-white px-4 py-2 hover:bg-gray-800 transition-colors"
+          >
+            Buy Pack (₹100)
+          </button>
         </div>
         <div className="rounded-xl border p-4 bg-white hover:shadow-md transition-shadow">
           <div className="text-sm text-gray-600">Email sends left</div>
           <div className="text-3xl font-bold mt-1">{emailsLeft}</div>
-          <form action="/api/purchase/order" method="post">
-            <button className="mt-3 w-full rounded-lg bg-black text-white px-4 py-2 hover:bg-gray-800 transition-colors">
-              Buy Pack (₹100)
-            </button>
-          </form>
+          <button
+            onClick={handlePurchase}
+            className="mt-3 w-full rounded-lg bg-black text-white px-4 py-2 hover:bg-gray-800 transition-colors"
+          >
+            Buy Pack (₹100)
+          </button>
         </div>
         <div className="rounded-xl border p-4 bg-white hover:shadow-md transition-shadow">
           <div className="text-sm text-gray-600">Profiles</div>
@@ -95,7 +178,7 @@ export default function DashboardPage() {
 
       <div className="rounded-xl border p-4 bg-white hover:shadow-md transition-shadow">
         <h2 className="font-semibold mb-3">Create/Lock Profile</h2>
-        <form action="/api/identity/submit" method="post" className="grid md:grid-cols-5 gap-2">
+        <form onSubmit={handleIdentitySubmit} className="grid md:grid-cols-5 gap-2">
           <input
             name="fullName"
             placeholder="Full name"
