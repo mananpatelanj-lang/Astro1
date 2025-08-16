@@ -1,5 +1,46 @@
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
 
-createRoot(document.getElementById("root")!).render(<App />);
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import './index.css';
+import { AuthProvider } from './auth/AuthContext';
+import Header from './components/Header';
+import HomePage from './pages/HomePage';
+import PricingPage from './pages/PricingPage';
+import DashboardPage from './pages/DashboardPage';
+import ProtectedRoute from './router/ProtectedRoute';
+
+const router = createBrowserRouter([
+  { path: '/', element: <HomePage /> },
+  { path: '/pricing', element: <PricingPage /> },
+  { 
+    path: '/dashboard', 
+    element: (
+      <ProtectedRoute>
+        <DashboardPage />
+      </ProtectedRoute>
+    ) 
+  },
+]);
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      <Header />
+      <main className="mx-auto max-w-5xl p-6">{children}</main>
+      <footer className="mx-auto max-w-5xl p-6 text-xs text-gray-500 border-t mt-10">
+        These are general remedies. Please consult professional/knowledgeable astrologers/numerologists on how to use these remedies, keeping in mind factors unique to your birth chart.
+      </footer>
+    </div>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <AuthProvider>
+      <Shell>
+        <RouterProvider router={router} />
+      </Shell>
+    </AuthProvider>
+  </React.StrictMode>
+);
