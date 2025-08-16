@@ -6,7 +6,7 @@ export default function HomePage() {
     <section className="grid gap-12">
       {/* HERO */}
       <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
-        <div className="absolute inset-0 opacity-80" aria-hidden>
+        <div className="absolute inset-0 opacity-80" aria-hidden="true">
           <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl bg-gradient-to-br from-violet-400 via-purple-400 to-pink-400" />
           <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full blur-3xl bg-gradient-to-br from-orange-400 via-red-400 to-pink-400" />
         </div>
@@ -117,3 +117,88 @@ export default function HomePage() {
             to="/pricing" 
             className="rounded-xl border-2 border-orange-300 bg-white/80 px-5 py-3 text-sm md:text-base hover:bg-orange-50 hover:border-orange-400 transition-all duration-300 text-orange-700 font-medium"
           >
+            See ₹100 pack
+          </Link>
+        </div>
+      </div>
+
+      {/* FAQ / DISCLAIMER SHORT */}
+      <div className="rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 shadow-md">
+        <h3 className="font-semibold mb-2 text-gray-800">Gentle reminder</h3>
+        <p className="text-sm text-gray-600">
+          These are general remedies. Please consult professional/knowledgeable astrologers/numerologists on how to use these remedies, keeping in mind factors unique to your birth chart.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function Badge({ children, color }: { children: React.ReactNode; color: string }) {
+  const colorClasses = {
+    purple: "bg-purple-100/90 text-purple-700 border-purple-200 shadow-purple-100",
+    pink: "bg-pink-100/90 text-pink-700 border-pink-200 shadow-pink-100",
+    orange: "bg-orange-100/90 text-orange-700 border-orange-200 shadow-orange-100",
+    red: "bg-red-100/90 text-red-700 border-red-200 shadow-red-100"
+  };
+  
+  return (
+    <span className={`inline-flex items-center gap-2 rounded-full backdrop-blur px-3 py-2 text-xs border-2 shadow-lg hover:shadow-xl transition-all duration-300 font-medium ${colorClasses[color as keyof typeof colorClasses]}`}>
+      {children}
+    </span>
+  );
+}
+
+function Chip({ children, color }: { children: React.ReactNode; color: string }) {
+  const colorClasses = {
+    purple: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+    pink: "bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100",
+    orange: "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100",
+    red: "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+  };
+  
+  return (
+    <span className={`inline-flex items-center rounded-full border-2 px-3 py-1 text-xs font-medium transition-all duration-300 hover:shadow-md cursor-pointer ${colorClasses[color as keyof typeof colorClasses]}`}>
+      {children}
+    </span>
+  );
+}
+
+function Step({ n, title, children, color }: { n: number; title: string; children: React.ReactNode; color: string }) {
+  const colorClasses = {
+    purple: "bg-purple-600 shadow-purple-200",
+    pink: "bg-pink-600 shadow-pink-200",
+    orange: "bg-orange-600 shadow-orange-200",
+    red: "bg-red-600 shadow-red-200"
+  };
+  
+  return (
+    <li className="rounded-xl border-2 border-gray-200 bg-white p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+      <div className="flex items-center gap-3 mb-3">
+        <span className={`h-8 w-8 grid place-items-center rounded-full text-white text-sm font-bold shadow-lg ${colorClasses[color as keyof typeof colorClasses]}`}>
+          {n}
+        </span>
+        <h3 className="font-semibold text-gray-800">{title}</h3>
+      </div>
+      <p className="text-sm text-gray-600 leading-relaxed">{children}</p>
+    </li>
+  );
+}
+
+function Pillar({ icon, title, children, color }: { icon: string; title: string; children: React.ReactNode; color: string }) {
+  const colorClasses = {
+    purple: "border-purple-200 bg-gradient-to-br from-purple-50 to-white hover:from-purple-100 hover:to-purple-50",
+    pink: "border-pink-200 bg-gradient-to-br from-pink-50 to-white hover:from-pink-100 hover:to-pink-50",
+    orange: "border-orange-200 bg-gradient-to-br from-orange-50 to-white hover:from-orange-100 hover:to-orange-50",
+    red: "border-red-200 bg-gradient-to-br from-red-50 to-white hover:from-red-100 hover:to-red-50"
+  };
+  
+  return (
+    <div className={`rounded-xl border-2 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${colorClasses[color as keyof typeof colorClasses]}`}>
+      <div className="flex items-center gap-3 mb-3">
+        <span className="text-2xl drop-shadow-sm">{icon}</span>
+        <h3 className="font-semibold text-gray-800">{title}</h3>
+      </div>
+      <p className="text-sm text-gray-600 leading-relaxed">{children}</p>
+    </div>
+  );
+}
