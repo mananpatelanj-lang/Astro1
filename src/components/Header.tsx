@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useAuthModal } from '../hooks/useAuthModal';
 
 function initials(email?: string) {
   if (!email) return 'U';
@@ -13,8 +14,9 @@ function initials(email?: string) {
 }
 
 export default function Header() {
-  const { user, signIn, signOut } = useAuth();
-  const [open, setOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { setOpen } = useAuthModal();
+  const [open, setDropdown] = useState(false);
 
   return (
     <header className="border-b bg-white">
@@ -28,7 +30,7 @@ export default function Header() {
           </Link>
           {!user ? (
             <button 
-              onClick={() => signIn()} 
+              onClick={() => setOpen(true)}
               className="inline-block rounded-lg bg-black text-white px-3 py-1 hover:bg-gray-800 transition-colors"
             >
               Sign in
@@ -36,7 +38,7 @@ export default function Header() {
           ) : (
             <div className="relative">
               <button 
-                onClick={() => setOpen(v => !v)} 
+                onClick={() => setDropdown(v => !v)} 
                 className="h-8 w-8 rounded-full bg-black text-white grid place-items-center text-xs hover:bg-gray-800 transition-colors"
               >
                 {initials(user.email)}
@@ -47,13 +49,13 @@ export default function Header() {
                   <Link 
                     to="/dashboard" 
                     className="block px-3 py-2 text-sm hover:bg-gray-50"
-                    onClick={() => setOpen(false)}
+                    onClick={() => setDropdown(false)}
                   >
                     Dashboard
                   </Link>
                   <button 
                     onClick={() => { 
-                      setOpen(false); 
+                      setDropdown(false); 
                       signOut(); 
                     }} 
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"

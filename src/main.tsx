@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import './index.css';
 import { AuthProvider } from './auth/AuthContext';
+import { AuthModalProvider } from './hooks/useAuthModal';
+import AuthModal from './components/AuthModal';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import PricingPage from './pages/PricingPage';
@@ -17,6 +19,7 @@ function Layout() {
       <main className="mx-auto max-w-5xl p-6">
         <Outlet />
       </main>
+      <AuthModal />
       <footer className="mx-auto max-w-5xl p-6 text-xs text-gray-500 border-t mt-10">
         These are general remedies. Please consult professional/knowledgeable astrologers/numerologists on how to use these remedies, keeping in mind factors unique to your birth chart.
       </footer>
@@ -46,7 +49,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
+      <AuthModalProvider>
+        <RouterProvider router={router} />
+      </AuthModalProvider>
     </AuthProvider>
   </React.StrictMode>
 );

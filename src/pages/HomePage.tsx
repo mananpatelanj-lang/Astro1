@@ -1,7 +1,10 @@
 
 import { Link } from "react-router-dom";
+import { useAuthModal } from "../hooks/useAuthModal";
 
 export default function HomePage() {
+  const { setOpen } = useAuthModal();
+
   return (
     <section className="grid gap-12">
       {/* HERO */}
@@ -20,12 +23,12 @@ export default function HomePage() {
             Get simple, actionable guidance across four pillars — <b className="text-purple-700">Sound frequency</b>, <b className="text-pink-700">Food</b>, <b className="text-orange-700">Gemstone</b>, and <b className="text-red-700">Hand Mudra</b> — mapped to your active <i>Mahadasha</i> and <i>Antardasha</i>.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link 
-              to="/dashboard" 
+            <button 
+              onClick={() => setOpen(true)}
               className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 text-sm md:text-base hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               Try Free ✨
-            </Link>
+            </button>
             <Link 
               to="/pricing" 
               className="rounded-xl border-2 border-purple-300 bg-white/80 backdrop-blur px-6 py-3 text-sm md:text-base hover:bg-purple-50 hover:border-purple-400 transition-all duration-300 text-purple-700 font-medium"
@@ -107,12 +110,12 @@ export default function HomePage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link 
-            to="/dashboard" 
+          <button 
+            onClick={() => setOpen(true)}
             className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white px-5 py-3 text-sm md:text-base hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-md hover:shadow-lg"
           >
             Generate my remedies ✨
-          </Link>
+          </button>
           <Link 
             to="/pricing" 
             className="rounded-xl border-2 border-orange-300 bg-white/80 px-5 py-3 text-sm md:text-base hover:bg-orange-50 hover:border-orange-400 transition-all duration-300 text-orange-700 font-medium"

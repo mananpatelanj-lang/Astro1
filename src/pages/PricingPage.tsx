@@ -1,20 +1,28 @@
 
 import { useAuth } from '../auth/AuthContext';
+import { useAuthModal } from '../hooks/useAuthModal';
 import { useNavigate } from 'react-router-dom';
 
 export default function PricingPage() {
-  const { user, signIn, buyPack } = useAuth();
+  const { user, buyPack } = useAuth();
+  const { setOpen } = useAuthModal();
   const navigate = useNavigate();
 
   const handleTryFree = () => {
-    if (!user) signIn();
-    navigate('/dashboard');
+    if (!user) {
+      setOpen(true);
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleBuyPack = () => {
-    if (!user) signIn();
-    buyPack();
-    navigate('/dashboard');
+    if (!user) {
+      setOpen(true);
+    } else {
+      buyPack();
+      navigate('/dashboard');
+    }
   };
 
   return (
