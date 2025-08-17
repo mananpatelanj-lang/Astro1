@@ -7,6 +7,11 @@ export default function HomePage() {
 
   return (
     <section className="grid gap-12">
+      {/* OAuth Debug Tool - Remove this after fixing */}
+      <div className="mb-8">
+        <OAuthTest />
+      </div>
+
       {/* HERO */}
       <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
         <div className="absolute inset-0 opacity-80" aria-hidden="true">
