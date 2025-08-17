@@ -7,6 +7,15 @@ export default function HomePage() {
   const { setOpen } = useAuthModal();
   const { user, loading } = useAuth();
 
+  // Handle OAuth callback if there are auth fragments in URL
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && (hash.includes('access_token') || hash.includes('error'))) {
+      // This is an OAuth callback, redirect to auth callback handler
+      window.location.href = '/auth/callback' + hash;
+    }
+  }, []);
+
   // Auto-redirect authenticated users to dashboard
   if (loading) return <div>Loading...</div>;
   if (user) return <Navigate to="/dashboard" replace />;
