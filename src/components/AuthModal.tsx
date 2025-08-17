@@ -23,12 +23,11 @@ export default function AuthModal() {
   const handleGoogleSignIn = async () => {
     try {
       setErr(''); // Clear any previous errors
-      console.log('Starting Google sign-in...');
       await signInWithGoogle();
-      // Note: We don't close() here because the OAuth redirect will handle navigation
+      // OAuth will redirect, so we don't close the modal here
     } catch (e: any) {
-      console.error('AuthModal Google sign-in error:', e);
-      setErr(e.message || 'Google sign in failed. Please check your internet connection and try again.');
+      console.error('Google sign-in error:', e);
+      setErr(`Google sign-in failed: ${e.message || 'Unknown error'}`);
     }
   };
 
