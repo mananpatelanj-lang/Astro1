@@ -4,11 +4,12 @@ import { useAuthModal } from '../hooks/useAuthModal';
 
 export default function AuthModal() {
   const { open, setOpen } = useAuthModal();
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resendConfirmation } = useAuth();
   const [tab, setTab] = useState<'root' | 'email' | 'signup'>('root');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
+  const [showResend, setShowResend] = useState(false);
 
   if (!open) return null;
 
@@ -23,14 +24,12 @@ export default function AuthModal() {
   const handleGoogleSignIn = async () => {
     try {
       setErr(''); // Clear any previous errors
-
-      // Show loading state briefly
-      setErr('Opening Google sign-in...');
+      setErr('Opening Google sign-in popup...');
 
       await signInWithGoogle();
 
-      // The OAuth flow will handle the redirect/popup
-      // Don't close modal immediately as user might return to it
+      // Close modal on successful authentication
+      close();
     } catch (e: any) {
       console.error('Google sign-in error:', e);
       setErr(`Google sign-in failed: ${e.message || 'Please try again'}`);
@@ -43,6 +42,20 @@ export default function AuthModal() {
       close();
     } catch (e: any) {
       setErr(e.message || 'Login failed');
+      // Show resend option if email not confirmed
+      if (e.message?.includes('confirmation link')) {
+        setShowResend(true);
+      }
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    try {
+      await resendConfirmation(email);
+      setShowResend(false);
+      setErr('');
+    } catch (e: any) {
+      setErr(e.message || 'Failed to resend confirmation email');
     }
   };
 
@@ -133,6 +146,14 @@ export default function AuthModal() {
             >
               {tab === 'email' ? 'Login' : 'Create account'}
             </button>
+            {showResend && (
+              <button
+                onClick={handleResendConfirmation}
+                className="rounded-lg bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors font-medium text-sm"
+              >
+                Resend Confirmation Email
+              </button>
+            )}
             <button
               onClick={() => setTab('root')}
               className="text-gray-500 hover:text-gray-700 text-sm"

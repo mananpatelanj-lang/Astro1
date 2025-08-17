@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { toast } from '@/components/ui/sonner';
 
 type Plan = 'FREE' | 'PRO';
 
@@ -18,6 +19,7 @@ type AuthCtx = {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pw: string) => Promise<void>;
   signUpWithEmail: (email: string, pw: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
   buyPack: () => Promise<void>;
 };
 
@@ -38,12 +40,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           // Defer profile fetch to avoid deadlock
           setTimeout(async () => {
-            const { data: profile } = await supabase
+            let { data: profile } = await supabase
               .from('profiles')
               .select('*')
               .eq('user_id', session.user.id)
               .single();
-            
+
+            // If no profile exists, create one
+            if (!profile) {
+              const { data: newProfile } = await supabase
+                .from('profiles')
+                .insert({
+                  user_id: session.user.id,
+                  email: session.user.email || '',
+                  display_name: session.user.email || '',
+                  plan: 'FREE',
+                  provider: session.user.app_metadata.provider === 'google' ? 'google' : 'password'
+                })
+                .select()
+                .single();
+
+              profile = newProfile;
+            }
+
             if (profile) {
               setUser({
                 email: profile.email || session.user.email || '',
@@ -67,12 +86,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         // Defer profile fetch
         setTimeout(async () => {
-          const { data: profile } = await supabase
+          let { data: profile } = await supabase
             .from('profiles')
             .select('*')
             .eq('user_id', session.user.id)
             .single();
-          
+
+          // If no profile exists, create one
+          if (!profile) {
+            const { data: newProfile } = await supabase
+              .from('profiles')
+              .insert({
+                user_id: session.user.id,
+                email: session.user.email || '',
+                display_name: session.user.email || '',
+                plan: 'FREE',
+                provider: session.user.app_metadata.provider === 'google' ? 'google' : 'password'
+              })
+              .select()
+              .single();
+
+            profile = newProfile;
+          }
+
           if (profile) {
             setUser({
               email: profile.email || session.user.email || '',
@@ -93,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/`,
@@ -101,13 +137,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             access_type: 'offline',
             prompt: 'consent',
           },
-          skipBrowserRedirect: false
+          skipBrowserRedirect: true
         }
       });
 
       if (error) {
         console.error('Google sign-in error:', error);
         throw new Error(error.message || 'Google sign-in failed. Please check your OAuth configuration.');
+      }
+
+      // If we get a URL, open it in a popup
+      if (data?.url) {
+        const popup = window.open(
+          data.url,
+          'google-signin',
+          'width=500,height=600,scrollbars=yes,resizable=yes'
+        );
+
+        if (!popup) {
+          throw new Error('Popup blocked. Please enable popups for this site.');
+        }
+
+        // Listen for popup to close (when user completes auth)
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            // Auth state will be updated by the auth listener
+          }
+        }, 1000);
       }
     } catch (err: any) {
       console.error('OAuth error:', err);
@@ -122,6 +179,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     if (error) {
       console.error('Email sign-in error:', error);
+      if (error.message === 'Email not confirmed') {
+        throw new Error('Please check your email and click the confirmation link before signing in.');
+      }
       throw new Error(error.message || 'Email sign-in failed. Please check your credentials.');
     }
   };
@@ -136,7 +196,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     if (error) {
       console.error('Email sign-up error:', error);
+      if (error.message.includes('you can only request this after')) {
+        throw new Error('Too many sign-up attempts. Please wait a minute before trying again.');
+      }
       throw new Error(error.message || 'Email sign-up failed. Please check your email format and password strength.');
+    } else {
+      // Show success toast
+      toast.success('Email sent successfully!', {
+        description: 'Please check your email and click the confirmation link to verify your account.',
+        duration: 5000
+      });
     }
   };
 
@@ -144,18 +213,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const resendConfirmation = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`
+      }
+    });
+
+    if (error) {
+      console.error('Resend confirmation error:', error);
+      throw new Error(error.message || 'Failed to resend confirmation email.');
+    } else {
+      toast.success('Confirmation email sent!', {
+        description: 'Please check your email for the new confirmation link.',
+        duration: 5000
+      });
+    }
+  };
+
   const buyPack = async () => {
     if (!user || !session?.user) return;
     const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    
+
     const { error } = await supabase
       .from('profiles')
-      .update({ 
-        plan: 'PRO', 
-        pro_expires_at: expires 
+      .update({
+        plan: 'PRO',
+        pro_expires_at: expires
       })
       .eq('user_id', session.user.id);
-    
+
     if (!error) {
       setUser({ ...user, plan: 'PRO', proExpiresAt: expires });
     }
@@ -168,6 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
+    resendConfirmation,
     buyPack
   }), [user, loading]);
 
