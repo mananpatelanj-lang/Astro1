@@ -93,32 +93,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      console.log('=== GOOGLE OAUTH DEBUG ===');
+      console.log('=== GOOGLE OAUTH DEBUG START ===');
       console.log('Current origin:', window.location.origin);
       console.log('Current hostname:', window.location.hostname);
       console.log('Full URL:', window.location.href);
+      console.log('User Agent:', navigator.userAgent);
 
+      // Test Supabase connection first
+      const { data: session } = await supabase.auth.getSession();
+      console.log('Current session:', session);
+
+      // Try OAuth with minimal options first
+      console.log('Attempting OAuth with minimal config...');
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
+        provider: 'google'
       });
 
       if (error) {
-        console.error('Google sign-in error:', error);
+        console.error('=== OAUTH ERROR ===');
+        console.error('Error message:', error.message);
         console.error('Error details:', JSON.stringify(error, null, 2));
-        throw new Error(`Google sign-in failed: ${error.message}`);
+
+        // Try alternative approach
+        console.log('Trying alternative OAuth config...');
+        const { data: altData, error: altError } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/`,
+            scopes: 'email profile'
+          }
+        });
+
+        if (altError) {
+          console.error('Alternative OAuth also failed:', altError);
+          throw new Error(`Google sign-in failed: ${error.message || altError.message}`);
+        }
+
+        console.log('Alternative OAuth data:', altData);
+        return;
       }
 
+      console.log('=== OAUTH SUCCESS ===');
       console.log('OAuth data:', data);
-      console.log('Google OAuth redirect initiated successfully');
+      console.log('URL should redirect to Google...');
+
     } catch (err) {
-      console.error('OAuth error:', err);
+      console.error('=== OAUTH CATCH ERROR ===');
+      console.error('Caught error:', err);
+      console.error('Error stack:', err.stack);
       throw err;
     }
   };
