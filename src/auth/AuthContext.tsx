@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             access_type: 'offline',
             prompt: 'consent',
           },
-          skipBrowserRedirect: false
+          skipBrowserRedirect: true
         }
       });
 
@@ -157,6 +157,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!popup) {
           throw new Error('Popup blocked. Please enable popups for this site.');
         }
+
+        // Listen for popup to close (when user completes auth)
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            // Auth state will be updated by the auth listener
+          }
+        }, 1000);
       }
     } catch (err: any) {
       console.error('OAuth error:', err);
