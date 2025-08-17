@@ -8,7 +8,7 @@ export type User = {
   email: string;
   plan: Plan;
   proExpiresAt?: string;
-  provider?: 'google' | 'github' | 'discord' | 'password';
+  provider?: 'google' | 'password';
 } | null;
 
 type AuthCtx = {
@@ -16,8 +16,6 @@ type AuthCtx = {
   loading: boolean;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signInWithGitHub: () => Promise<void>;
-  signInWithDiscord: () => Promise<void>;
   signInWithEmail: (email: string, pw: string) => Promise<void>;
   signUpWithEmail: (email: string, pw: string) => Promise<void>;
   buyPack: () => Promise<void>;
@@ -51,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email: profile.email || session.user.email || '',
                 plan: profile.plan as Plan,
                 proExpiresAt: profile.pro_expires_at,
-                provider: profile.provider as 'google' | 'github' | 'discord' | 'password'
+                provider: profile.provider as 'google' | 'password'
               });
             }
             setLoading(false);
@@ -80,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: profile.email || session.user.email || '',
               plan: profile.plan as Plan,
               proExpiresAt: profile.pro_expires_at,
-              provider: profile.provider as 'google' | 'github' | 'discord' | 'password'
+              provider: profile.provider as 'google' | 'password'
             });
           }
           setLoading(false);
@@ -103,32 +101,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       console.error('Google sign-in error:', error);
       throw new Error(error.message || 'Google sign-in failed. Please check your OAuth configuration.');
-    }
-  };
-
-  const signInWithGitHub = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/`
-      }
-    });
-    if (error) {
-      console.error('GitHub sign-in error:', error);
-      throw new Error(error.message || 'GitHub sign-in failed. Please check your OAuth configuration.');
-    }
-  };
-
-  const signInWithDiscord = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: {
-        redirectTo: `${window.location.origin}/`
-      }
-    });
-    if (error) {
-      console.error('Discord sign-in error:', error);
-      throw new Error(error.message || 'Discord sign-in failed. Please check your OAuth configuration.');
     }
   };
 
@@ -183,8 +155,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signOut,
     signInWithGoogle,
-    signInWithGitHub,
-    signInWithDiscord,
     signInWithEmail,
     signUpWithEmail,
     buyPack
