@@ -132,39 +132,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          },
-          skipBrowserRedirect: true
+          }
         }
       });
 
       if (error) {
         console.error('Google sign-in error:', error);
         throw new Error(error.message || 'Google sign-in failed. Please check your OAuth configuration.');
-      }
-
-      // If we get a URL, open it in a popup
-      if (data?.url) {
-        const popup = window.open(
-          data.url,
-          'google-signin',
-          'width=500,height=600,scrollbars=yes,resizable=yes'
-        );
-
-        if (!popup) {
-          throw new Error('Popup blocked. Please enable popups for this site.');
-        }
-
-        // Listen for popup to close (when user completes auth)
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkClosed);
-            // Auth state will be updated by the auth listener
-          }
-        }, 1000);
       }
     } catch (err: any) {
       console.error('OAuth error:', err);
