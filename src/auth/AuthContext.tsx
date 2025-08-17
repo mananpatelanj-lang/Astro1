@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { toast } from '@/components/ui/sonner';
 
 type Plan = 'FREE' | 'PRO';
 
@@ -143,6 +144,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Too many sign-up attempts. Please wait a minute before trying again.');
       }
       throw new Error(error.message || 'Email sign-up failed. Please check your email format and password strength.');
+    } else {
+      // Show success toast
+      toast.success('Email sent successfully!', {
+        description: 'Please check your email and click the confirmation link to verify your account.',
+        duration: 5000
+      });
     }
   };
 
