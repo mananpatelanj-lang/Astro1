@@ -1,6 +1,6 @@
-
 import { Link } from "react-router-dom";
 import { useAuthModal } from "../hooks/useAuthModal";
+import { OAuthTest } from "../components/OAuthTest";
 
 export default function HomePage() {
   const { setOpen } = useAuthModal();
