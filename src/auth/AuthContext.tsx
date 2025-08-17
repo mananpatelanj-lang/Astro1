@@ -1,15 +1,14 @@
-
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 type Plan = 'FREE' | 'PRO';
 
-export type User = { 
-  email: string; 
-  plan: Plan; 
+export type User = {
+  email: string;
+  plan: Plan;
   proExpiresAt?: string;
-  provider?: 'google' | 'password';
+  provider?: 'google' | 'github' | 'discord' | 'password';
 } | null;
 
 type AuthCtx = {
@@ -17,6 +16,8 @@ type AuthCtx = {
   loading: boolean;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithGitHub: () => Promise<void>;
+  signInWithDiscord: () => Promise<void>;
   signInWithEmail: (email: string, pw: string) => Promise<void>;
   signUpWithEmail: (email: string, pw: string) => Promise<void>;
   buyPack: () => Promise<void>;
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email: profile.email || session.user.email || '',
                 plan: profile.plan as Plan,
                 proExpiresAt: profile.pro_expires_at,
-                provider: profile.provider as 'google' | 'password'
+                provider: profile.provider as 'google' | 'github' | 'discord' | 'password'
               });
             }
             setLoading(false);
@@ -79,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: profile.email || session.user.email || '',
               plan: profile.plan as Plan,
               proExpiresAt: profile.pro_expires_at,
-              provider: profile.provider as 'google' | 'password'
+              provider: profile.provider as 'google' | 'github' | 'discord' | 'password'
             });
           }
           setLoading(false);
@@ -99,7 +100,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         redirectTo: `${window.location.origin}/`
       }
     });
-    if (error) throw error;
+    if (error) {
+      console.error('Google sign-in error:', error);
+      throw new Error(error.message || 'Google sign-in failed. Please check your OAuth configuration.');
+    }
+  };
+
+  const signInWithGitHub = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${window.location.origin}/`
+      }
+    });
+    if (error) {
+      console.error('GitHub sign-in error:', error);
+      throw new Error(error.message || 'GitHub sign-in failed. Please check your OAuth configuration.');
+    }
+  };
+
+  const signInWithDiscord = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        redirectTo: `${window.location.origin}/`
+      }
+    });
+    if (error) {
+      console.error('Discord sign-in error:', error);
+      throw new Error(error.message || 'Discord sign-in failed. Please check your OAuth configuration.');
+    }
   };
 
   const signInWithEmail = async (email: string, password: string) => {
@@ -107,7 +137,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password
     });
-    if (error) throw error;
+    if (error) {
+      console.error('Email sign-in error:', error);
+      throw new Error(error.message || 'Email sign-in failed. Please check your credentials.');
+    }
   };
 
   const signUpWithEmail = async (email: string, password: string) => {
@@ -118,7 +151,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailRedirectTo: `${window.location.origin}/`
       }
     });
-    if (error) throw error;
+    if (error) {
+      console.error('Email sign-up error:', error);
+      throw new Error(error.message || 'Email sign-up failed. Please check your email format and password strength.');
+    }
   };
 
   const signOut = async () => {
@@ -142,14 +178,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const value = useMemo(() => ({ 
-    user, 
+  const value = useMemo(() => ({
+    user,
     loading,
-    signOut, 
-    signInWithGoogle, 
-    signInWithEmail, 
-    signUpWithEmail, 
-    buyPack 
+    signOut,
+    signInWithGoogle,
+    signInWithGitHub,
+    signInWithDiscord,
+    signInWithEmail,
+    signUpWithEmail,
+    buyPack
   }), [user, loading]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
