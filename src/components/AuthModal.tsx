@@ -23,14 +23,12 @@ export default function AuthModal() {
   const handleGoogleSignIn = async () => {
     try {
       setErr(''); // Clear any previous errors
-
-      // Show loading state briefly
-      setErr('Opening Google sign-in...');
+      setErr('Opening Google sign-in popup...');
 
       await signInWithGoogle();
 
-      // The OAuth flow will handle the redirect/popup
-      // Don't close modal immediately as user might return to it
+      // Close modal on successful authentication
+      close();
     } catch (e: any) {
       console.error('Google sign-in error:', e);
       setErr(`Google sign-in failed: ${e.message || 'Please try again'}`);
