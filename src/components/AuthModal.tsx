@@ -4,12 +4,19 @@ import { useAuthModal } from '../hooks/useAuthModal';
 
 export default function AuthModal() {
   const { open, setOpen } = useAuthModal();
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resendConfirmation } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resendConfirmation, user } = useAuth();
   const [tab, setTab] = useState<'root' | 'email' | 'signup'>('root');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
   const [showResend, setShowResend] = useState(false);
+
+  // Close modal when user is authenticated
+  useEffect(() => {
+    if (user) {
+      close();
+    }
+  }, [user]);
 
   if (!open) return null;
 
