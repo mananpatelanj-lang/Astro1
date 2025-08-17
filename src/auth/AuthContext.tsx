@@ -19,6 +19,7 @@ type AuthCtx = {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pw: string) => Promise<void>;
   signUpWithEmail: (email: string, pw: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
   buyPack: () => Promise<void>;
 };
 
@@ -170,18 +171,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const resendConfirmation = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`
+      }
+    });
+
+    if (error) {
+      console.error('Resend confirmation error:', error);
+      throw new Error(error.message || 'Failed to resend confirmation email.');
+    } else {
+      toast.success('Confirmation email sent!', {
+        description: 'Please check your email for the new confirmation link.',
+        duration: 5000
+      });
+    }
+  };
+
   const buyPack = async () => {
     if (!user || !session?.user) return;
     const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    
+
     const { error } = await supabase
       .from('profiles')
-      .update({ 
-        plan: 'PRO', 
-        pro_expires_at: expires 
+      .update({
+        plan: 'PRO',
+        pro_expires_at: expires
       })
       .eq('user_id', session.user.id);
-    
+
     if (!error) {
       setUser({ ...user, plan: 'PRO', proExpiresAt: expires });
     }
@@ -194,6 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
+    resendConfirmation,
     buyPack
   }), [user, loading]);
 
