@@ -36,13 +36,14 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'pricing', element: <PricingPage /> },
-      { 
-        path: 'dashboard', 
+      { path: 'auth/callback', element: <AuthCallback /> },
+      {
+        path: 'dashboard',
         element: (
           <ProtectedRoute>
             <DashboardPage />
           </ProtectedRoute>
-        ) 
+        )
       },
     ]
   }
