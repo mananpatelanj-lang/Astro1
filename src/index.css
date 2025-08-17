@@ -103,3 +103,30 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Ensure OAuth popups appear above everything and don't crash the site */
+@layer utilities {
+  .oauth-popup-safe {
+    position: relative;
+    z-index: 9999;
+  }
+
+  /* Prevent scroll lock during OAuth flow */
+  body.oauth-flow {
+    overflow: visible !important;
+  }
+
+  /* Ensure modals work with popups */
+  [data-radix-portal] {
+    z-index: 50;
+  }
+
+  /* OAuth popup styling - if needed */
+  .oauth-popup {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 10000 !important;
+  }
+}

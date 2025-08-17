@@ -1,13 +1,12 @@
-
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 type Plan = 'FREE' | 'PRO';
 
-export type User = { 
-  email: string; 
-  plan: Plan; 
+export type User = {
+  email: string;
+  plan: Plan;
   proExpiresAt?: string;
   provider?: 'google' | 'password';
 } | null;
@@ -93,13 +92,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          skipBrowserRedirect: false
+        }
+      });
+
+      if (error) {
+        console.error('Google sign-in error:', error);
+        throw new Error(error.message || 'Google sign-in failed. Please check your OAuth configuration.');
       }
-    });
-    if (error) throw error;
+    } catch (err: any) {
+      console.error('OAuth error:', err);
+      throw new Error(err.message || 'Authentication failed');
+    }
   };
 
   const signInWithEmail = async (email: string, password: string) => {
@@ -107,7 +120,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password
     });
-    if (error) throw error;
+    if (error) {
+      console.error('Email sign-in error:', error);
+      throw new Error(error.message || 'Email sign-in failed. Please check your credentials.');
+    }
   };
 
   const signUpWithEmail = async (email: string, password: string) => {
@@ -118,7 +134,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailRedirectTo: `${window.location.origin}/`
       }
     });
-    if (error) throw error;
+    if (error) {
+      console.error('Email sign-up error:', error);
+      throw new Error(error.message || 'Email sign-up failed. Please check your email format and password strength.');
+    }
   };
 
   const signOut = async () => {
@@ -142,14 +161,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const value = useMemo(() => ({ 
-    user, 
+  const value = useMemo(() => ({
+    user,
     loading,
-    signOut, 
-    signInWithGoogle, 
-    signInWithEmail, 
-    signUpWithEmail, 
-    buyPack 
+    signOut,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    buyPack
   }), [user, loading]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
