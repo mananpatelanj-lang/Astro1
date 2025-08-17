@@ -1,6 +1,7 @@
 import { Link, Navigate } from "react-router-dom";
 import { useAuthModal } from "../hooks/useAuthModal";
 import { useAuth } from "../auth/AuthContext";
+import { useEffect } from "react";
 
 export default function HomePage() {
   const { setOpen } = useAuthModal();
