@@ -8,21 +8,52 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Handle the auth callback
-        const { data, error } = await supabase.auth.getSession();
-        
+        // Check if we have auth fragments in the URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const error = hashParams.get('error');
+
         if (error) {
-          console.error('Auth callback error:', error);
-          // Redirect to home with error
+          console.error('OAuth error:', error);
+          navigate('/?error=auth_failed');
+          return;
+        }
+
+        if (accessToken) {
+          // Set the session from URL fragments
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || ''
+          });
+
+          if (sessionError) {
+            console.error('Session error:', sessionError);
+            navigate('/?error=auth_failed');
+            return;
+          }
+
+          if (data.session) {
+            // Clear the URL hash
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Successfully authenticated, redirect to dashboard
+            navigate('/dashboard');
+            return;
+          }
+        }
+
+        // Fallback: check current session
+        const { data, error: getSessionError } = await supabase.auth.getSession();
+
+        if (getSessionError) {
+          console.error('Auth callback error:', getSessionError);
           navigate('/?error=auth_failed');
           return;
         }
 
         if (data.session) {
-          // Successfully authenticated, redirect to dashboard
           navigate('/dashboard');
         } else {
-          // No session, redirect to home
           navigate('/');
         }
       } catch (err) {
