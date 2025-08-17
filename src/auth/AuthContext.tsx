@@ -122,6 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     if (error) {
       console.error('Email sign-in error:', error);
+      if (error.message === 'Email not confirmed') {
+        throw new Error('Please check your email and click the confirmation link before signing in.');
+      }
       throw new Error(error.message || 'Email sign-in failed. Please check your credentials.');
     }
   };
@@ -136,6 +139,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     if (error) {
       console.error('Email sign-up error:', error);
+      if (error.message.includes('you can only request this after')) {
+        throw new Error('Too many sign-up attempts. Please wait a minute before trying again.');
+      }
       throw new Error(error.message || 'Email sign-up failed. Please check your email format and password strength.');
     }
   };
