@@ -93,7 +93,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      console.log('Initiating Google sign-in from:', window.location.origin);
+      console.log('=== GOOGLE OAUTH DEBUG ===');
+      console.log('Current origin:', window.location.origin);
+      console.log('Current hostname:', window.location.hostname);
+      console.log('Full URL:', window.location.href);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -107,9 +111,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Google sign-in error:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         throw new Error(`Google sign-in failed: ${error.message}`);
       }
 
+      console.log('OAuth data:', data);
       console.log('Google OAuth redirect initiated successfully');
     } catch (err) {
       console.error('OAuth error:', err);
