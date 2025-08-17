@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 type Plan = 'FREE' | 'PRO';
 
@@ -21,80 +23,111 @@ type AuthCtx = {
 
 const Ctx = createContext<AuthCtx | undefined>(undefined);
 
-// Mock user storage for demo (replace with real backend later)
-const USERS_KEY = 'auth.users';
-
-function getUsers(): Record<string, { pw: string }> {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
-
-function setUsers(obj: Record<string, { pw: string }>) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(obj));
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
-  // Load from localStorage
   useEffect(() => {
-    const raw = localStorage.getItem('auth.user');
-    if (raw) setUser(JSON.parse(raw));
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        if (session?.user) {
+          // Fetch user profile from our profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          if (profile) {
+            setUser({
+              email: profile.email || session.user.email || '',
+              plan: profile.plan as Plan,
+              proExpiresAt: profile.pro_expires_at,
+              provider: profile.provider as 'google' | 'password'
+            });
+          }
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        // Fetch user profile
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile) {
+              setUser({
+                email: profile.email || session.user.email || '',
+                plan: profile.plan as Plan,
+                proExpiresAt: profile.pro_expires_at,
+                provider: profile.provider as 'google' | 'password'
+              });
+            }
+          });
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Persist to localStorage
-  useEffect(() => {
-    if (user) localStorage.setItem('auth.user', JSON.stringify(user));
-    else localStorage.removeItem('auth.user');
-  }, [user]);
-
-  // Mock Google sign-in
-  const signInWithGoogle = () => {
-    const i = Math.floor(Math.random() * 999);
-    setUser({ 
-      email: `user${i}@gmail.com`, 
-      plan: 'FREE', 
-      provider: 'google' 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`
+      }
     });
+    if (error) throw error;
   };
 
-  // Email login
-  const signInWithEmail = async (email: string, pw: string) => {
-    const db = getUsers();
-    if (!db[email] || db[email].pw !== pw) {
-      throw new Error('Invalid email or password');
-    }
-    setUser({ 
-      email, 
-      plan: 'FREE', 
-      provider: 'password' 
+  const signInWithEmail = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
     });
+    if (error) throw error;
   };
 
-  // Email signup
-  const signUpWithEmail = async (email: string, pw: string) => {
-    const db = getUsers();
-    if (db[email]) {
-      throw new Error('Account already exists');
-    }
-    db[email] = { pw };
-    setUsers(db);
-    setUser({ 
-      email, 
-      plan: 'FREE', 
-      provider: 'password' 
+  const signUpWithEmail = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`
+      }
     });
+    if (error) throw error;
   };
 
-  const signOut = () => setUser(null);
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
 
-  const buyPack = () => {
-    if (!user) return;
+  const buyPack = async () => {
+    if (!user || !session?.user) return;
     const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    setUser({ ...user, plan: 'PRO', proExpiresAt: expires });
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ 
+        plan: 'PRO', 
+        pro_expires_at: expires 
+      })
+      .eq('user_id', session.user.id);
+    
+    if (!error) {
+      setUser({ ...user, plan: 'PRO', proExpiresAt: expires });
+    }
   };
 
   const value = useMemo(() => ({ 
