@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
@@ -11,6 +10,7 @@ import HomePage from './pages/HomePage';
 import PricingPage from './pages/PricingPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './router/ProtectedRoute';
+import { Toaster } from '@/components/ui/sonner';
 
 function Layout() {
   return (
@@ -20,6 +20,7 @@ function Layout() {
         <Outlet />
       </main>
       <AuthModal />
+      <Toaster />
       <footer className="mx-auto max-w-5xl p-6 text-xs text-gray-500 border-t mt-10">
         These are general remedies. Please consult professional/knowledgeable astrologers/numerologists on how to use these remedies, keeping in mind factors unique to your birth chart.
       </footer>
