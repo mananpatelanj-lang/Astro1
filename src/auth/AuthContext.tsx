@@ -40,12 +40,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           // Defer profile fetch to avoid deadlock
           setTimeout(async () => {
-            const { data: profile } = await supabase
+            let { data: profile } = await supabase
               .from('profiles')
               .select('*')
               .eq('user_id', session.user.id)
               .single();
-            
+
+            // If no profile exists, create one
+            if (!profile) {
+              const { data: newProfile } = await supabase
+                .from('profiles')
+                .insert({
+                  user_id: session.user.id,
+                  email: session.user.email || '',
+                  display_name: session.user.email || '',
+                  plan: 'FREE',
+                  provider: session.user.app_metadata.provider === 'google' ? 'google' : 'password'
+                })
+                .select()
+                .single();
+
+              profile = newProfile;
+            }
+
             if (profile) {
               setUser({
                 email: profile.email || session.user.email || '',
@@ -69,12 +86,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         // Defer profile fetch
         setTimeout(async () => {
-          const { data: profile } = await supabase
+          let { data: profile } = await supabase
             .from('profiles')
             .select('*')
             .eq('user_id', session.user.id)
             .single();
-          
+
+          // If no profile exists, create one
+          if (!profile) {
+            const { data: newProfile } = await supabase
+              .from('profiles')
+              .insert({
+                user_id: session.user.id,
+                email: session.user.email || '',
+                display_name: session.user.email || '',
+                plan: 'FREE',
+                provider: session.user.app_metadata.provider === 'google' ? 'google' : 'password'
+              })
+              .select()
+              .single();
+
+            profile = newProfile;
+          }
+
           if (profile) {
             setUser({
               email: profile.email || session.user.email || '',
