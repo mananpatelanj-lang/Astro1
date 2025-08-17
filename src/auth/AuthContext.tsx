@@ -14,11 +14,12 @@ export type User = {
 
 type AuthCtx = {
   user: User;
-  signOut: () => void;
-  signInWithGoogle: () => void;
+  loading: boolean;
+  signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pw: string) => Promise<void>;
   signUpWithEmail: (email: string, pw: string) => Promise<void>;
-  buyPack: () => void;
+  buyPack: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | undefined>(undefined);
@@ -26,14 +27,47 @@ const Ctx = createContext<AuthCtx | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
+        setLoading(true);
+        
         if (session?.user) {
-          // Fetch user profile from our profiles table
+          // Defer profile fetch to avoid deadlock
+          setTimeout(async () => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            if (profile) {
+              setUser({
+                email: profile.email || session.user.email || '',
+                plan: profile.plan as Plan,
+                proExpiresAt: profile.pro_expires_at,
+                provider: profile.provider as 'google' | 'password'
+              });
+            }
+            setLoading(false);
+          }, 0);
+        } else {
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        // Defer profile fetch
+        setTimeout(async () => {
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
@@ -48,32 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               provider: profile.provider as 'google' | 'password'
             });
           }
-        } else {
-          setUser(null);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        // Fetch user profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            if (profile) {
-              setUser({
-                email: profile.email || session.user.email || '',
-                plan: profile.plan as Plan,
-                proExpiresAt: profile.pro_expires_at,
-                provider: profile.provider as 'google' | 'password'
-              });
-            }
-          });
+          setLoading(false);
+        }, 0);
+      } else {
+        setLoading(false);
       }
     });
 
@@ -132,12 +144,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(() => ({ 
     user, 
+    loading,
     signOut, 
     signInWithGoogle, 
     signInWithEmail, 
     signUpWithEmail, 
     buyPack 
-  }), [user]);
+  }), [user, loading]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

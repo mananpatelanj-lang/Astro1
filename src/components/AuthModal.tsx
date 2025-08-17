@@ -21,9 +21,13 @@ export default function AuthModal() {
     setOpen(false);
   };
 
-  const handleGoogleSignIn = () => {
-    signInWithGoogle();
-    close();
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      close();
+    } catch (e: any) {
+      setErr(e.message || 'Google sign in failed');
+    }
   };
 
   const handleEmailLogin = async () => {

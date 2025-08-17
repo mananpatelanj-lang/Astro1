@@ -54,9 +54,9 @@ export default function Header() {
                     Dashboard
                   </Link>
                   <button 
-                    onClick={() => { 
+                    onClick={async () => { 
                       setDropdown(false); 
-                      signOut(); 
+                      await signOut(); 
                     }} 
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
                   >
