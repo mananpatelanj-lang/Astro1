@@ -1,8 +1,14 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useAuthModal } from "../hooks/useAuthModal";
+import { useAuth } from "../auth/AuthContext";
 
 export default function HomePage() {
   const { setOpen } = useAuthModal();
+  const { user, loading } = useAuth();
+
+  // Auto-redirect authenticated users to dashboard
+  if (loading) return <div>Loading...</div>;
+  if (user) return <Navigate to="/dashboard" replace />;
 
   return (
     <section className="grid gap-12">
