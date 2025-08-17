@@ -9,6 +9,7 @@ import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import PricingPage from './pages/PricingPage';
 import DashboardPage from './pages/DashboardPage';
+import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from './router/ProtectedRoute';
 import { Toaster } from '@/components/ui/sonner';
 
