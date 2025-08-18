@@ -18,6 +18,9 @@ export default function AuthModal() {
     setTab('root');
     setEmail('');
     setPw('');
+    setShowResend(false);
+    setShowUserExists(false);
+    setExistingUserProvider('');
     setOpen(false);
   }, [setOpen]);
 
