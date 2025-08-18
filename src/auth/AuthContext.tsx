@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { toast } from '@/components/ui/sonner';
 import { validateEmail } from '@/lib/emailValidation';
+import { checkUserExists } from '@/lib/userExists';
 
 type Plan = 'FREE' | 'PRO';
 
