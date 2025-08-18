@@ -136,13 +136,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          }
+          },
+          skipBrowserRedirect: true
         }
       });
 
       if (error) {
         console.error('Google sign-in error:', error);
         throw new Error(error.message || 'Google sign-in failed. Please check your OAuth configuration.');
+      }
+
+      // If we get a URL, open it in a popup
+      if (data?.url) {
+        const popup = window.open(
+          data.url,
+          'google-signin',
+          'width=500,height=600,scrollbars=yes,resizable=yes'
+        );
+
+        if (!popup) {
+          throw new Error('Popup blocked. Please enable popups for this site.');
+        }
+
+        // Return a promise that resolves when auth completes
+        return new Promise((resolve, reject) => {
+          const checkClosed = setInterval(() => {
+            if (popup.closed) {
+              clearInterval(checkClosed);
+              resolve(undefined);
+            }
+          }, 1000);
+
+          // Timeout after 5 minutes
+          setTimeout(() => {
+            clearInterval(checkClosed);
+            if (!popup.closed) {
+              popup.close();
+            }
+            reject(new Error('Authentication timeout'));
+          }, 300000);
+        });
       }
     } catch (err: any) {
       console.error('OAuth error:', err);
