@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import EmailMatrix from '../components/EmailMatrix';
+import BirthDetailsForm, { BirthDetails } from '../components/BirthDetailsForm';
+import AstrologyResults from '../components/AstrologyResults';
 
 export default function DashboardPage() {
   const { user, buyPack } = useAuth();
