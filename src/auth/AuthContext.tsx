@@ -207,6 +207,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUpWithEmail = async (email: string, password: string) => {
+    // Validate email domain before attempting sign up
+    const emailValidation = await validateEmail(email);
+    if (!emailValidation.isValid) {
+      throw new Error(emailValidation.error || 'Invalid email address');
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
