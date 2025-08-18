@@ -279,6 +279,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const forgotPassword = async (email: string) => {
+    // Validate email domain before attempting password reset
+    const emailValidation = await validateEmail(email);
+    if (!emailValidation.isValid) {
+      throw new Error(emailValidation.error || 'Invalid email address');
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    });
+
+    if (error) {
+      console.error('Forgot password error:', error);
+      throw new Error(error.message || 'Failed to send password reset email.');
+    } else {
+      toast.success('Password reset email sent!', {
+        description: 'Please check your email for the password reset link.',
+        duration: 5000
+      });
+    }
+  };
+
   const buyPack = async () => {
     if (!user || !session?.user) return;
     const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
