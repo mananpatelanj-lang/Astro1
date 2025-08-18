@@ -13,10 +13,15 @@ export default function AuthModal() {
 
   // Close modal when user is authenticated
   useEffect(() => {
-    if (user) {
-      close();
+    if (user && open) {
+      // Use setTimeout to avoid race condition with DOM operations
+      const timeoutId = setTimeout(() => {
+        close();
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [user]);
+  }, [user, open]);
 
   if (!open) return null;
 
