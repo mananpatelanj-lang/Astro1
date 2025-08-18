@@ -35,8 +35,8 @@ export default function AuthModal() {
 
       await signInWithGoogle();
 
-      // Close modal on successful authentication
-      close();
+      // Don't close modal immediately - let the auth state listener handle it
+      setErr('Authentication successful! Redirecting...');
     } catch (e: any) {
       console.error('Google sign-in error:', e);
       setErr(`Google sign-in failed: ${e.message || 'Please try again'}`);
