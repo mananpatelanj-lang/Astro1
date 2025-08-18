@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { toast } from '@/components/ui/sonner';
+import { validateEmail } from '@/lib/emailValidation';
+import { checkUserExists } from '@/lib/userExists';
 
 type Plan = 'FREE' | 'PRO';
 
@@ -20,6 +22,8 @@ type AuthCtx = {
   signInWithEmail: (email: string, pw: string) => Promise<void>;
   signUpWithEmail: (email: string, pw: string) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  checkUserExists: (email: string) => Promise<{exists: boolean, provider?: string}>;
   buyPack: () => Promise<void>;
 };
 
@@ -132,7 +136,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: window.location.hostname === 'localhost'
+            ? 'http://localhost:8080/'
+            : `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -158,13 +164,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error('Popup blocked. Please enable popups for this site.');
         }
 
-        // Listen for popup to close (when user completes auth)
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
+        // Return a promise that resolves when auth completes
+        return new Promise((resolve, reject) => {
+          const checkClosed = setInterval(() => {
+            if (popup.closed) {
+              clearInterval(checkClosed);
+              resolve(undefined);
+            }
+          }, 1000);
+
+          // Timeout after 5 minutes
+          setTimeout(() => {
             clearInterval(checkClosed);
-            // Auth state will be updated by the auth listener
-          }
-        }, 1000);
+            if (!popup.closed) {
+              popup.close();
+            }
+            reject(new Error('Authentication timeout'));
+          }, 300000);
+        });
       }
     } catch (err: any) {
       console.error('OAuth error:', err);
@@ -173,6 +190,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithEmail = async (email: string, password: string) => {
+    // Validate email domain before attempting sign in
+    const emailValidation = await validateEmail(email);
+    if (!emailValidation.isValid) {
+      throw new Error(emailValidation.error || 'Invalid email address');
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -187,6 +210,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUpWithEmail = async (email: string, password: string) => {
+    // Validate email domain before attempting sign up
+    const emailValidation = await validateEmail(email);
+    if (!emailValidation.isValid) {
+      throw new Error(emailValidation.error || 'Invalid email address');
+    }
+
+    // Check if user already exists
+    const userExists = await checkUserExists(email);
+    if (userExists.exists) {
+      const providerText = userExists.provider === 'google'
+        ? 'Google account'
+        : 'email and password';
+      throw new Error(
+        `USER_EXISTS:An account with this email already exists. Please sign in using your ${providerText}.`
+      );
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -214,6 +254,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resendConfirmation = async (email: string) => {
+    // Validate email domain before attempting resend
+    const emailValidation = await validateEmail(email);
+    if (!emailValidation.isValid) {
+      throw new Error(emailValidation.error || 'Invalid email address');
+    }
+
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
@@ -228,6 +274,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       toast.success('Confirmation email sent!', {
         description: 'Please check your email for the new confirmation link.',
+        duration: 5000
+      });
+    }
+  };
+
+  const forgotPassword = async (email: string) => {
+    // Validate email domain before attempting password reset
+    const emailValidation = await validateEmail(email);
+    if (!emailValidation.isValid) {
+      throw new Error(emailValidation.error || 'Invalid email address');
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    });
+
+    if (error) {
+      console.error('Forgot password error:', error);
+      throw new Error(error.message || 'Failed to send password reset email.');
+    } else {
+      toast.success('Password reset email sent!', {
+        description: 'Please check your email for the password reset link.',
         duration: 5000
       });
     }
@@ -258,6 +326,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithEmail,
     signUpWithEmail,
     resendConfirmation,
+    forgotPassword,
+    checkUserExists,
     buyPack
   }), [user, loading]);
 

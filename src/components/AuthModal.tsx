@@ -1,40 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useAuthModal } from '../hooks/useAuthModal';
 
 export default function AuthModal() {
   const { open, setOpen } = useAuthModal();
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resendConfirmation } = useAuth();
-  const [tab, setTab] = useState<'root' | 'email' | 'signup'>('root');
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resendConfirmation, forgotPassword, user } = useAuth();
+  const [tab, setTab] = useState<'root' | 'email' | 'signup' | 'forgot'>('root');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
   const [showResend, setShowResend] = useState(false);
+  const [showUserExists, setShowUserExists] = useState(false);
+  const [existingUserProvider, setExistingUserProvider] = useState<string>('');
 
-  if (!open) return null;
-
-  const close = () => {
+  const close = useCallback(() => {
     setErr('');
     setTab('root');
     setEmail('');
     setPw('');
+    setShowResend(false);
+    setShowUserExists(false);
+    setExistingUserProvider('');
     setOpen(false);
-  };
+  }, [setOpen]);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = useCallback(async () => {
     try {
-      setErr(''); // Clear any previous errors
       setErr('Opening Google sign-in popup...');
 
       await signInWithGoogle();
 
-      // Close modal on successful authentication
-      close();
+      // Clear error on success - modal will be closed by useEffect
+      setErr('');
     } catch (e: any) {
       console.error('Google sign-in error:', e);
       setErr(`Google sign-in failed: ${e.message || 'Please try again'}`);
     }
-  };
+  }, [signInWithGoogle]);
+
+  // Close modal when user is authenticated
+  useEffect(() => {
+    if (user && open) {
+      // Use setTimeout to avoid race condition with DOM operations
+      const timeoutId = setTimeout(() => {
+        close();
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [user, open, close]);
+
+  if (!open) return null;
 
   const handleEmailLogin = async () => {
     try {
