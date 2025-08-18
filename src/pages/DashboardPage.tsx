@@ -6,10 +6,17 @@ import AstrologyResults from '../components/AstrologyResults';
 
 export default function DashboardPage() {
   const { user, buyPack } = useAuth();
-  
+  const [birthDetails, setBirthDetails] = useState<BirthDetails | null>(null);
+  const [showResults, setShowResults] = useState(false);
+
   if (!user) return null; // protected by ProtectedRoute
 
   const isPro = user.plan === 'PRO';
+
+  const handleBirthDetailsSubmit = (details: BirthDetails) => {
+    setBirthDetails(details);
+    setShowResults(true);
+  };
 
   return (
     <div className="grid gap-6">
