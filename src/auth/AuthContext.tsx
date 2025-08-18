@@ -216,6 +216,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(emailValidation.error || 'Invalid email address');
     }
 
+    // Check if user already exists
+    const userExists = await checkUserExists(email);
+    if (userExists.exists) {
+      const providerText = userExists.provider === 'google'
+        ? 'Google account'
+        : 'email and password';
+      throw new Error(
+        `USER_EXISTS:An account with this email already exists. Please sign in using your ${providerText}.`
+      );
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
