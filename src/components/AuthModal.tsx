@@ -25,13 +25,13 @@ export default function AuthModal() {
 
   if (!open) return null;
 
-  const close = () => {
+  const close = useCallback(() => {
     setErr('');
     setTab('root');
     setEmail('');
     setPw('');
     setOpen(false);
-  };
+  }, [setOpen]);
 
   const handleGoogleSignIn = async () => {
     try {
