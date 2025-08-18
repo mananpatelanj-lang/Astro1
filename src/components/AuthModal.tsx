@@ -11,20 +11,6 @@ export default function AuthModal() {
   const [err, setErr] = useState('');
   const [showResend, setShowResend] = useState(false);
 
-  // Close modal when user is authenticated
-  useEffect(() => {
-    if (user && open) {
-      // Use setTimeout to avoid race condition with DOM operations
-      const timeoutId = setTimeout(() => {
-        close();
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [user, open]);
-
-  if (!open) return null;
-
   const close = useCallback(() => {
     setErr('');
     setTab('root');
@@ -46,6 +32,20 @@ export default function AuthModal() {
       setErr(`Google sign-in failed: ${e.message || 'Please try again'}`);
     }
   }, [signInWithGoogle]);
+
+  // Close modal when user is authenticated
+  useEffect(() => {
+    if (user && open) {
+      // Use setTimeout to avoid race condition with DOM operations
+      const timeoutId = setTimeout(() => {
+        close();
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [user, open, close]);
+
+  if (!open) return null;
 
   const handleEmailLogin = async () => {
     try {
