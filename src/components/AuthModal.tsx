@@ -4,12 +4,14 @@ import { useAuthModal } from '../hooks/useAuthModal';
 
 export default function AuthModal() {
   const { open, setOpen } = useAuthModal();
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resendConfirmation, user } = useAuth();
-  const [tab, setTab] = useState<'root' | 'email' | 'signup'>('root');
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resendConfirmation, forgotPassword, user } = useAuth();
+  const [tab, setTab] = useState<'root' | 'email' | 'signup' | 'forgot'>('root');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
   const [showResend, setShowResend] = useState(false);
+  const [showUserExists, setShowUserExists] = useState(false);
+  const [existingUserProvider, setExistingUserProvider] = useState<string>('');
 
   const close = useCallback(() => {
     setErr('');
