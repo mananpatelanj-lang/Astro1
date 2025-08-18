@@ -1,8 +1,6 @@
 import { Link, Navigate } from "react-router-dom";
 import { useAuthModal } from "../hooks/useAuthModal";
 import { useAuth } from "../auth/AuthContext";
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function HomePage() {
   const { setOpen } = useAuthModal();
