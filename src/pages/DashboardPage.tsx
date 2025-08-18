@@ -102,44 +102,14 @@ export default function DashboardPage() {
         </>
       )}
 
-      {/* Email Matrix for PRO or Mahadasha info for FREE */}
-      {isPro ? (
+      {/* Email Matrix - Only shown for PRO users and only when results are shown */}
+      {isPro && showResults && (
         <div className="rounded-xl border p-4 bg-white hover:shadow-md transition-shadow">
           <h2 className="font-semibold mb-2">3×3 Email Matrix</h2>
           <p className="text-xs text-gray-600 mb-3">
             Any three sends across any profiles fill these boxes. After all 3 are used, user must buy a new pack.
           </p>
-          <EmailMatrix emailsUsed={0} />
-        </div>
-      ) : (
-        <div className="rounded-xl border p-4 bg-white hover:shadow-md transition-shadow">
-          <h2 className="font-semibold mb-3">Current Planetary Period</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="rounded-lg border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white p-4">
-              <h3 className="font-medium mb-2 text-purple-800">Active Mahadasha</h3>
-              <div className="text-lg font-semibold text-purple-700">Venus (Shukra)</div>
-              <div className="text-sm text-gray-600 mt-1">Focus: Relationships, creativity, aesthetics</div>
-            </div>
-            <div className="rounded-lg border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-white p-4">
-              <h3 className="font-medium mb-2 text-pink-800">Active Antardasha</h3>
-              <div className="text-lg font-semibold text-pink-700">Mercury (Budh)</div>
-              <div className="text-sm text-gray-600 mt-1">Focus: Communication, learning, business</div>
-            </div>
-          </div>
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="text-sm text-blue-800 font-medium">✉️ Free Version</div>
-            <div className="text-sm text-blue-700 mt-1">
-              You can send 1 email with personalized remedies for your current planetary period.
-            </div>
-          </div>
-          <div className="mt-3">
-            <button
-              onClick={buyPack}
-              className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 hover:from-purple-700 hover:to-pink-700 transition-all font-medium"
-            >
-              Upgrade to Pro for 3 profiles + 3 emails ✨
-            </button>
-          </div>
+          <EmailMatrix emailsUsed={1} />
         </div>
       )}
     </div>
