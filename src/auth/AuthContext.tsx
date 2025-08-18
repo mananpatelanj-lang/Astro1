@@ -326,6 +326,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithEmail,
     signUpWithEmail,
     resendConfirmation,
+    forgotPassword,
+    checkUserExists,
     buyPack
   }), [user, loading]);
 
