@@ -240,6 +240,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resendConfirmation = async (email: string) => {
+    // Validate email domain before attempting resend
+    const emailValidation = await validateEmail(email);
+    if (!emailValidation.isValid) {
+      throw new Error(emailValidation.error || 'Invalid email address');
+    }
+
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
