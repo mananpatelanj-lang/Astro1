@@ -33,20 +33,19 @@ export default function AuthModal() {
     setOpen(false);
   }, [setOpen]);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = useCallback(async () => {
     try {
-      setErr(''); // Clear any previous errors
       setErr('Opening Google sign-in popup...');
 
       await signInWithGoogle();
 
-      // Don't close modal immediately - let the auth state listener handle it
-      setErr('Authentication successful! Redirecting...');
+      // Clear error on success - modal will be closed by useEffect
+      setErr('');
     } catch (e: any) {
       console.error('Google sign-in error:', e);
       setErr(`Google sign-in failed: ${e.message || 'Please try again'}`);
     }
-  };
+  }, [signInWithGoogle]);
 
   const handleEmailLogin = async () => {
     try {
