@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '../auth/AuthContext';
 import EmailMatrix from '../components/EmailMatrix';
@@ -36,21 +35,21 @@ export default function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid md:grid-cols-3 gap-4">
-        <Stat 
-          title="Trials left" 
-          value={isPro ? '3' : '—'} 
+        <Stat
+          title="Trials left"
+          value={isPro ? '3' : '—'}
           cta={!isPro ? 'Upgrade to Pro' : undefined}
           onCtaClick={!isPro ? buyPack : undefined}
         />
-        <Stat 
-          title="Email sends left" 
-          value={isPro ? '3' : '—'} 
+        <Stat
+          title="Email sends left"
+          value={isPro ? '3' : '1'}
           cta={!isPro ? 'Upgrade to Pro' : undefined}
           onCtaClick={!isPro ? buyPack : undefined}
         />
-        <Stat 
-          title="Profiles" 
-          value={isPro ? '0 / 3' : '1 (locked)'} 
+        <Stat
+          title="Profiles"
+          value={isPro ? '0 / 3' : '1 (locked)'}
         />
       </div>
 
