@@ -10,11 +10,32 @@ export default function HomePage() {
 
   // Handle OAuth callback if there are auth fragments in URL
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && (hash.includes('access_token') || hash.includes('error'))) {
-      // This is an OAuth callback, redirect to auth callback handler
-      window.location.href = '/auth/callback' + hash;
-    }
+    const handleAuthCallback = async () => {
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        try {
+          // Parse the auth tokens from URL hash
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+
+          if (accessToken) {
+            // Set the session directly
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || ''
+            });
+
+            // Clean the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        } catch (error) {
+          console.error('Auth callback error:', error);
+        }
+      }
+    };
+
+    handleAuthCallback();
   }, []);
 
   // Auto-redirect authenticated users to dashboard
