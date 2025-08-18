@@ -22,6 +22,8 @@ type AuthCtx = {
   signInWithEmail: (email: string, pw: string) => Promise<void>;
   signUpWithEmail: (email: string, pw: string) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  checkUserExists: (email: string) => Promise<{exists: boolean, provider?: string}>;
   buyPack: () => Promise<void>;
 };
 
